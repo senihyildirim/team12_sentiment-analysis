@@ -9,3 +9,5 @@ env/
 *.pyd
 
 .ipynb_checkpoints/
+
+saved_model/
