@@ -11,15 +11,19 @@ def load_utilities(model_choice):
             tokenizer = pickle.load(handle)
         with open('saved_model/labelencoder.pickle', 'rb') as handle:
             labelencoder = pickle.load(handle)
+        char_dict = None
     elif model_choice == '2':
         # Load the character-level model
         model = load_model('saved_model/character_level_cnn.keras')
+        with open('saved_model/char_dict.pickle', 'rb') as handle:
+            char_dict = pickle.load(handle)
         tokenizer = None  # Assuming not used for character-level model
-        labelencoder = pickle.load(open('saved_model/labelencoder_char.pickle', 'rb'))
+        with open('saved_model/labelencoder.pickle', 'rb') as handle:
+            labelencoder = pickle.load(handle)
     
-    return model, tokenizer, labelencoder
+    return model, tokenizer, labelencoder, char_dict
 
-def preprocess_text(text, tokenizer, max_sequence_length=250, model_choice='1'):
+def preprocess_text(text, tokenizer, char_dict, max_sequence_length=250, model_choice='1'):
     if model_choice == '1':
         # Preprocess for word-based model
         sequence = tokenizer.texts_to_sequences([text])
@@ -30,11 +34,11 @@ def preprocess_text(text, tokenizer, max_sequence_length=250, model_choice='1'):
         encoded = np.zeros((1, max_sequence_length), dtype=int)
         for i, char in enumerate(text.lower()):
             if i < max_sequence_length:
-                encoded[0, i] = CHAR_DICT.get(char, 0)  # Use 0 for unknown characters
+                encoded[0, i] = char_dict.get(char, 0)  # Use 0 for unknown characters
         return encoded
 
-def predict_emotion(text, model, tokenizer, labelencoder, model_choice):
-    processed_text = preprocess_text(text, tokenizer, model_choice=model_choice)
+def predict_emotion(text, model, tokenizer, labelencoder, char_dict, model_choice):
+    processed_text = preprocess_text(text, tokenizer, char_dict, model_choice=model_choice)
     predictions = model.predict(processed_text)
     predicted_index = np.argmax(predictions, axis=1)
     predicted_emotion = labelencoder.inverse_transform(predicted_index)
@@ -46,7 +50,7 @@ def main():
     print("2: Character-level CNN")
     model_choice = input("Enter choice (1 or 2): ")
 
-    model, tokenizer, labelencoder = load_utilities(model_choice)
+    model, tokenizer, labelencoder, char_dict = load_utilities(model_choice)
 
     emotionsEnum = {'sadness': 0, 'joy': 1, 'love': 2, 'anger': 3, 'fear': 4, 'surprise': 5}
 
@@ -56,7 +60,7 @@ def main():
         if input_text.lower() == 'exit':
             print("Exiting the program.")
             break
-        emotion = predict_emotion(input_text, model, tokenizer, labelencoder, model_choice)
+        emotion = predict_emotion(input_text, model, tokenizer, labelencoder, char_dict, model_choice)
         text_emotion = list(emotionsEnum.keys())[list(emotionsEnum.values()).index(emotion)]
         print(f"Predicted Emotion: {text_emotion}")
 
