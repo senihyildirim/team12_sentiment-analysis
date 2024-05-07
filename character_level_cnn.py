@@ -28,8 +28,8 @@ def encode_text(text):
 # Apply encoding function to the text column
 df['encoded'] = df['text'].apply(encode_text)
 
-# Maximum length for padding sequences
-max_length = 250
+max_length = 200    
+num_classes = 6 
 
 # Pad sequences for uniform input size
 X = pad_sequences(df['encoded'].values, maxlen=max_length, padding='post')
@@ -39,18 +39,24 @@ y = to_categorical(df['label'], num_classes=num_classes)
 
 # Define the model architecture
 model = Sequential([
-    Embedding(input_dim=num_characters, output_dim=100, input_length=max_length),
-    Dropout(0.2),
-    Conv1D(128, 7, activation='relu', padding='same'),
-    MaxPooling1D(2),
-    Conv1D(128, 5, activation='relu', padding='same'),
+    Embedding(input_dim=num_characters + 1, output_dim=100, input_length=max_length),
+    Conv1D(1024, 7, activation='relu', padding='same'),
+    MaxPooling1D(3),
+    Conv1D(1024, 7, activation='relu', padding='same'),
+    MaxPooling1D(3),
+    Conv1D(1024, 3, activation='relu', padding='same'),
+    Conv1D(1024, 3, activation='relu', padding='same'),
+    Conv1D(1024, 3, activation='relu', padding='same'),
+    MaxPooling1D(3),
     GlobalMaxPooling1D(),
-    Dense(256, activation='relu'),
+    Dense(2048, activation='relu'),
+    Dropout(0.5),
+    Dense(2048, activation='relu'),
     Dropout(0.5),
     Dense(num_classes, activation='softmax')
 ])
 
-model.build(input_shape=(None, max_length))  # None indicates the batch size can be variable
+model.build(input_shape=(None, max_length))
 
 model.summary()
 
@@ -58,7 +64,7 @@ model.summary()
 model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
 # Train the model
-model.fit(X, y, epochs=10, batch_size=64, validation_split=0.3)
+model.fit(X, y, epochs=2, batch_size=64, validation_split=0.3)
 
 # Save the trained model
 model.save('saved_model/character_level_cnn.keras')
