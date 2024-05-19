@@ -2,6 +2,7 @@ import numpy as np
 import pickle
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.sequence import pad_sequences
+import shap
 
 def load_utilities(model_choice):
     if model_choice == '1':
@@ -37,11 +38,27 @@ def preprocess_text(text, tokenizer, char_dict, max_sequence_length=250, model_c
                 encoded[0, i] = char_dict.get(char, 0)  # Use 0 for unknown characters
         return encoded
 
+
 def predict_emotion(text, model, tokenizer, labelencoder, char_dict, model_choice):
     processed_text = preprocess_text(text, tokenizer, char_dict, model_choice=model_choice)
     predictions = model.predict(processed_text)
     predicted_index = np.argmax(predictions, axis=1)
     predicted_emotion = labelencoder.inverse_transform(predicted_index)
+
+
+
+    text_input = ["Example text to predict dangerous emotion", "Another goood example text", "And another example text"]
+    processed_texts = np.array([preprocess_text(text, tokenizer, char_dict, model_choice='1') for text in text_input])
+    predictions = model.predict(processed_texts)
+   
+    explainer = shap.KernelExplainer(predictions, np.zeros((1, model.input_shape[1])))  # set according to input shape
+
+    # Example text input
+   
+    shap_values = explainer.shap_values(text_input)
+    shap.initjs()
+    shap.force_plot(explainer.expected_value[0], shap_values[0][0], text_input[0])
+    
     return predicted_emotion[0]
 
 def main():
