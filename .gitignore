@@ -11,3 +11,5 @@ env/
 .ipynb_checkpoints/
 
 saved_model/
+
+.DS_Store
