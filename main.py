@@ -7,7 +7,7 @@ import shap
 def load_utilities(model_choice):
     if model_choice == '1':
         # Load the word-based model
-        model = load_model('saved_model/model-01-0.93.keras')
+        model = load_model('final_models/cnn_best_model.keras')
         with open('saved_model/tokenizer.pickle', 'rb') as handle:
             tokenizer = pickle.load(handle)
         with open('saved_model/labelencoder.pickle', 'rb') as handle:
