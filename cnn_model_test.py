@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.utils import to_categorical
@@ -11,7 +12,7 @@ from itertools import cycle
 import pickle
 
 # Load the model
-model_path = 'saved_model/model-02-0.93.keras'
+model_path = 'saved_model/model-01-0.94.keras'
 model = load_model(model_path)
 
 # Load tokenizer and label encoder
@@ -22,10 +23,10 @@ with open('saved_model/labelencoder.pickle', 'rb') as handle:
     labelencoder = pickle.load(handle)
 
 # Load and prepare test data
-df_test = pd.read_csv('datasets/text.csv')
+df_test = pd.read_csv('datasets/test.csv')
 texts = df_test['text'].values
 sequences = tokenizer.texts_to_sequences(texts)
-X_test = pad_sequences(sequences, maxlen=250)
+X_test = pad_sequences(sequences, maxlen=200)
 
 y_test = labelencoder.transform(df_test['label'])
 y_test = to_categorical(y_test)
@@ -66,8 +67,8 @@ for i in range(n_classes):
 
 # Plot all ROC curves
 plt.figure(figsize=(7, 7))
-colors = cycle(['aqua', 'darkorange', 'cornflowerblue'])
-for i, color in enumerate(colors):
+colors = cycle(['aqua', 'darkorange', 'cornflowerblue', 'navy', 'darkred', 'purple'])
+for i, color in zip(range(n_classes), colors):
     plt.plot(fpr[i], tpr[i], color=color, lw=2,
              label='ROC curve of class {0} (area = {1:0.2f})'.format(i, roc_auc[i]))
 plt.plot([0, 1], [0, 1], 'k--', lw=2)
@@ -88,7 +89,7 @@ for i in range(n_classes):
     average_precision[i] = average_precision_score(y_test_bin[:, i], predictions[:, i])
 
 plt.figure(figsize=(7, 7))
-for i, color in enumerate(colors):
+for i, color in zip(range(n_classes), colors):
     plt.plot(recall[i], precision[i], color=color, lw=2,
              label='Precision-Recall curve of class {0} (area = {1:0.2f})'.format(i, average_precision[i]))
 plt.xlabel('Recall')
