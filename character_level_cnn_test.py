@@ -93,7 +93,7 @@ def plot_precision_recall_curve(y_test_bin, predictions, n_classes):
     plt.show()
 
 def main():
-    df_test = pd.read_csv('datasets/text.csv')
+    df_test = pd.read_csv('datasets/test.csv')
     model, char_dict = load_model_and_components()
     X_test = preprocess_data(df_test['text'].values, char_dict)
     y_test = to_categorical(df_test['label'], num_classes=6)  # Make sure to adjust num_classes if necessary
